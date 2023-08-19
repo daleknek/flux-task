@@ -1,182 +1,185 @@
 import React, { useState } from "react";
-import { Button } from "@mui/material";
-import { red } from "@mui/material/colors";
-import { Card as MuiCard, CardContent } from "@mui/material";
-import { Droppable, Draggable, DragDropContext } from "react-beautiful-dnd";
+import { Button, Typography, Input } from "@mui/material";
+import { Container } from "@mui/material";
+import { Droppable, Draggable } from "react-beautiful-dnd";
 import { v4 as uuid } from "uuid";
-import Task from "./Task";
-import { reorder } from "./utils/reorder";
+import TaskModal from "./TaskModal";
+import TaskCard from "./TaskCard";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import { useColumnsData } from "./LocalContext";
 
-function Column({ column, task, setColumns, handleDeleteColumn }) {
-  const [taskName, setTaskTitle] = useState("");
-  const [isAddingTask, setIsAddingTask] = useState(false);
+function Column({ column, deleteColumn, updateColumn }) {
+  const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
+  const [columnTasks, setColumnTasks] = useState([]);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(column.name);
+  const [editingTask, setEditingTask] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [taskId, setTaskId] = useState("");
+  const [columnsData, setColumnsData] = useColumnsData([]);
 
-  const handleAddTask = () => {
-    setIsAddingTask(true);
+  //Column functions
+
+  const handleNameChange = (event) => {
+    setEditedName(event.target.value);
   };
 
-  const handleConfirmTask = () => {
-    handleCreateTask(column.id, taskName, taskDescription);
-    setTaskTitle("");
-    setTaskDescription("");
-    setIsAddingTask(false);
+  const handleEditName = () => {
+    setIsEditingName(true);
   };
 
-  const handleCreateTask = (columnId, taskTitle, taskDescription) => {
-    setColumns((prevColumns) =>
-      prevColumns.map((column) =>
-        column.id === columnId
-          ? {
-              ...column,
-              tasks: [
-                ...column.tasks,
-                {
-                  id: uuid(),
-                  title: taskTitle,
-                  description: taskDescription,
-                },
-              ],
-            }
-          : column
-      )
-    );
+  const handleNameSave = () => {
+    setIsEditingName(false);
+    // if (editedName && editedName !== column.name) {
+    //   updateColumn(column.id, { name: editedName });
+    // }
+    const updatedColumn = {
+      ...column,
+      name: editedName,
+    };
+    columnsData[column.id] = updatedColumn;
   };
 
-  const handleDeleteTask = (columnId, taskId) => {
-    setColumns((prevColumns) => {
-      return prevColumns.map((column) => {
-        if (column.id === columnId) {
-          return {
-            ...column,
-            tasks: column.tasks.filter((task) => task.id !== taskId),
-          };
-        }
-        return column;
-      });
-    });
-  };
+  //Task functions
 
-  const reorderTasks = (columnId, startIndex, endIndex) => {
-    setColumns((prevColumns) =>
-      prevColumns.map((column) =>
-        column.id === columnId
-          ? {
-              ...column,
-              tasks: reorder(column.tasks, startIndex, endIndex),
-            }
-          : column
-      )
-    );
-  };
-
-  const moveTaskBetweenColumns = (
-    sourceColumnId,
-    destinationColumnId,
-    sourceIndex,
-    destinationIndex
-  ) => {
-    setColumns((prevColumns) => {
-      const columnsCopy = [...prevColumns];
-
-      const sourceColumn = columnsCopy.find(
-        (column) => column.id === sourceColumnId
-      );
-      const destinationColumn = columnsCopy.find(
-        (column) => column.id === destinationColumnId
-      );
-
-      const [movedTask] = sourceColumn.tasks.splice(sourceIndex, 1);
-
-      destinationColumn.tasks.splice(destinationIndex, 0, movedTask);
-
-      return columnsCopy;
-    });
-  };
-
-  const handleDragEnd = (result) => {
-    const { source, destination } = result;
-
-    if (!destination) {
-      return;
-    }
-
-    const sourceColumnId = source.droppableId;
-    const destinationColumnId = destination.droppableId;
-
-    if (sourceColumnId === destinationColumnId) {
-      reorderTasks(sourceColumnId, source.index, destination.index);
+  const handleCreateTask = (taskTitle, taskDescription) => {
+    if (editingTask) {
+      handleUpdateTask(taskId);
     } else {
-      moveTaskBetweenColumns(
-        sourceColumnId,
-        destinationColumnId,
-        source.index,
-        destination.index
-      );
+      const newTask = {
+        id: uuid(),
+        title: taskTitle,
+        description: taskDescription,
+        columnId: column.id,
+      };
+      setColumnTasks([...columnTasks, newTask]);
+      // column.tasks = columnTasks;
     }
+    setIsModalOpen(false);
+  };
+
+  const handleDeleteTask = (taskId) =>
+    setColumnTasks(columnTasks.filter((task) => task.id !== taskId));
+
+  const handleEditClick = (task) => {
+    setIsModalOpen(true);
+    setEditingTask(true);
+    setTaskId(task.id);
+    setTaskTitle(task.title);
+    setTaskDescription(task.description);
+  };
+
+  const handleUpdateTask = (taskId) => {
+    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) return;
+
+    setColumnTasks((prevTasks) => {
+      const newTasks = [...prevTasks];
+      newTasks[taskIndex] = {
+        ...newTasks[taskIndex],
+        title: taskTitle,
+        description: taskDescription,
+      };
+      return newTasks;
+    });
+    setEditingTask(false);
   };
 
   return (
     <div
       style={{
-        backgroundColor: "rgba(0, 123, 255, 0.1)",
-        padding: "10px",
-        margin: "10px",
+        backgroundColor: "#white",
         borderRadius: "5px",
+        padding: "10px",
+        margin: "10px 5px",
         width: "250px",
         boxSizing: "border-box",
         overflowY: "auto",
         flexShrink: 0,
         height: "auto",
+        boxShadow: "0px 1px 5px 0px rgba(0,0,0,0.2)",
       }}
     >
-      <h3>{column.name}</h3>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Button
-          onClick={() => handleDeleteColumn(column.id)}
-          style={{
-            backgroundColor: red[500],
-            color: "white",
-            marginTop: "10px",
-          }}
+      {isEditingName || !column.name ? (
+        <Input
+          placeholder="Enter column name"
+          value={editedName}
+          onChange={handleNameChange}
+          onBlur={handleNameSave}
+          onKeyDown={(event) => event.key === "Enter" && handleNameSave()}
+          autoFocus
+          style={{ fontSize: "18px", fontWeight: "bold" }}
+        />
+      ) : (
+        <Typography
+          variant="h6"
+          onClick={handleEditName}
+          style={{ fontSize: "18px", cursor: "pointer", fontWeight: "bold" }}
         >
-          Delete column
-        </Button>
-        {isAddingTask ? (
-          <MuiCard>
-            <Task
-              taskName={taskName}
-              setTaskTitle={setTaskTitle}
-              taskDescription={taskDescription}
-              setTaskDescription={setTaskDescription}
-              handleConfirmTask={handleConfirmTask}
-              handleAddTask={handleAddTask}
-              isAddingTask={isAddingTask}
-            ></Task>
-            <Button onClick={handleAddTask}>Add task</Button>
-          </MuiCard>
-        ) : (
-          <Button onClick={handleDeleteTask(column.id, task.id)}>
-            Delete task
-          </Button>
-        )}
-        <Droppable droppableId={column?.id}>
+          {column.name}
+        </Typography>
+      )}
+      <Button
+        style={{ opacity: 0.5 }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.5)}
+        onClick={deleteColumn}
+        startIcon={<DeleteIcon />}
+      />
+      <TaskModal
+        open={isModalOpen}
+        handleClose={() => isModalOpen(false)}
+        taskTitle={taskTitle}
+        setTaskTitle={setTaskTitle}
+        taskDescription={taskDescription}
+        setTaskDescription={setTaskDescription}
+        createTask={handleCreateTask}
+        columnId={column.id}
+      />
+      <Button onClick={() => setIsModalOpen(true)} startIcon={<AddIcon />}>
+        Add Task
+      </Button>
+
+      <Container>
+        <Droppable droppableId={column.id} type="task">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
-              {column.tasks.map((task, index) => (
+              {columnTasks.map((task, index) => (
                 <Draggable draggableId={task.id} index={index} key={task.id}>
                   {(provided) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
+                      style={{
+                        ...provided.draggableProps.style,
+                        backgroundColor: "#ffffff",
+                        borderRadius: "5px",
+                        padding: "8px",
+                        marginBottom: "10px",
+                        boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#e6e6e6";
+                        e.currentTarget.style.boxShadow =
+                          "0px 2px 6px rgba(0,0,0,0.15)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#ffffff";
+                        e.currentTarget.style.boxShadow =
+                          "0px 1px 3px rgba(0,0,0,0.1)";
+                      }}
                     >
-                      <MuiCard>
-                        <CardContent>
-                          <h4>{task.title}</h4>
-                          <p>{task.description}</p>
-                        </CardContent>
-                      </MuiCard>
+                      <TaskCard
+                        task={task}
+                        columnId={column.id}
+                        onDelete={handleDeleteTask}
+                        onEdit={handleEditClick}
+                      />
                     </div>
                   )}
                 </Draggable>
@@ -185,7 +188,7 @@ function Column({ column, task, setColumns, handleDeleteColumn }) {
             </div>
           )}
         </Droppable>
-      </DragDropContext>
+      </Container>
     </div>
   );
 }
