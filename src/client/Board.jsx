@@ -91,12 +91,9 @@ function Board() {
       return;
     }
 
-    const startColumn = columnsData.find(
-      (col) => col.id === source.droppableId
-    );
-    const finishColumn = columnsData.find(
-      (col) => col.id === destination.droppableId
-    );
+    const startColumn =  columns[source.droppableId];
+    
+    const finishColumn =  columns[destination.droppableId];
 
     if (startColumn.id === finishColumn.id) {
       // Reordering tasks within the same column
@@ -111,11 +108,8 @@ function Board() {
         ...startColumn,
         tasks: reorderedTasks,
       };
-      setColumnsData((prevColumns) => {
-        return prevColumns.map((col) =>
-          col.id === updatedColumn.id ? updatedColumn : col
-        );
-      });
+      // setColumnsData([...columns, updatedColumn]);
+
     } else {
       // Moving tasks between columns
       const result = move(
@@ -175,7 +169,7 @@ function Board() {
         </Button>
         <Container>
           <Droppable
-            droppableId={"droppable-columns"}
+            droppableId="droppable-columns"
             direction="horizontal"
             type="column"
           >
@@ -195,7 +189,7 @@ function Board() {
                   return (
                     <Draggable
                       key={`draggable-${column.id}`}
-                      draggableId={String(index)}
+                      draggableId={String(column.id)}
                       index={index}
                     >
                       {(provided) => (
