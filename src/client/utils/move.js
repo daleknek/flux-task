@@ -1,14 +1,16 @@
-export const move = (
-  sourceList,
-  destinationList,
+export function move(
+  source,
+  destination,
   droppableSource,
   droppableDestination
-) => {
-  const source = Array.from(sourceList);
-  const destination = Array.from(destinationList);
-  const [removed] = source.splice(droppableSource.index, 1);
+) {
+  const sourceClone = Array.from(source);
+  const destClone = Array.from(destination);
+  const [removed] = sourceClone.splice(droppableSource.index, 1);
+  destClone.splice(droppableDestination.index, 0, removed);
 
-  destination.splice(droppableDestination.index, 0, removed);
-
-  return { updatedSource: source, updatedDestination: destination };
-};
+  return {
+    updatedSource: sourceClone,
+    updatedDest: destClone,
+  };
+}

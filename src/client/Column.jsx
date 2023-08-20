@@ -9,16 +9,19 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { useColumnsData } from "./LocalContext";
 
-function Column({ column, deleteColumn, updateColumn }) {
+function Column({ column, deleteColumn }) {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
-  const [columnTasks, setColumnTasks] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(column.name);
   const [editingTask, setEditingTask] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskId, setTaskId] = useState("");
-  const [columnsData, setColumnsData] = useColumnsData([]);
+  const [columnsData, setColumnsData] = useColumnsData();
+
+  // useEffect(() => {
+  //   console.log("Component re-rendered!", columnsData);
+  // }, [columnsData]);
 
   //Column functions
 
@@ -32,15 +35,17 @@ function Column({ column, deleteColumn, updateColumn }) {
 
   const handleNameSave = () => {
     setIsEditingName(false);
-    // if (editedName && editedName !== column.name) {
-    //   updateColumn(column.id, { name: editedName });
-    // }
-    const updatedColumn = {
-      ...column,
-      name: editedName,
+    const updatedColumnsData = {
+      ...columnsData,
+      [column.id]: {
+        ...columnsData[column.id],
+        name: editedName,
+      },
     };
-    columnsData[column.id] = updatedColumn;
+    setColumnsData(updatedColumnsData);
   };
+
+  const tasks = column.tasks || [];
 
   //Task functions
 
@@ -54,14 +59,63 @@ function Column({ column, deleteColumn, updateColumn }) {
         description: taskDescription,
         columnId: column.id,
       };
-      setColumnTasks([...columnTasks, newTask]);
-      // column.tasks = columnTasks;
+
+      // updates the respective column in columnsData global state to reflect the new task
+      const updatedColumnsData = {
+        ...columnsData,
+        [column.id]: {
+          ...columnsData[column.id],
+          tasks: [...tasks, newTask],
+        },
+      };
+      setColumnsData(updatedColumnsData);
     }
+
     setIsModalOpen(false);
   };
 
-  const handleDeleteTask = (taskId) =>
-    setColumnTasks(columnTasks.filter((task) => task.id !== taskId));
+  const handleDeleteTask = (taskId) => {
+    // updates the global columnsData
+    const updatedTasks = tasks.filter((task) => task.id !== taskId);
+    const updatedColumnsData = {
+      ...columnsData,
+      [column.id]: {
+        ...columnsData[column.id],
+        tasks: updatedTasks,
+      },
+    };
+    setColumnsData(updatedColumnsData);
+  };
+
+  const handleUpdateTask = (taskId) => {
+    // Find the index of the task we want to update
+    const taskIndex = column.tasks.findIndex((task) => task.id === taskId);
+
+    // If the task was not found, exit early
+    if (taskIndex === -1) return;
+
+    // Copy the current column's tasks and modify the one we want to update
+    const updatedTasks = [...column.tasks];
+    updatedTasks[taskIndex] = {
+      ...updatedTasks[taskIndex],
+      title: taskTitle,
+      description: taskDescription,
+    };
+
+    // Update the global state with the modified tasks
+    const updatedColumnsData = {
+      ...columnsData,
+      [column.id]: {
+        ...columnsData[column.id],
+        tasks: updatedTasks,
+      },
+    };
+
+    setColumnsData(updatedColumnsData);
+
+    // Reset the editing state
+    setEditingTask(false);
+  };
 
   const handleEditClick = (task) => {
     setIsModalOpen(true);
@@ -69,23 +123,6 @@ function Column({ column, deleteColumn, updateColumn }) {
     setTaskId(task.id);
     setTaskTitle(task.title);
     setTaskDescription(task.description);
-  };
-
-  const handleUpdateTask = (taskId) => {
-    const taskIndex = columnTasks.findIndex((task) => task.id === taskId);
-
-    if (taskIndex === -1) return;
-
-    setColumnTasks((prevTasks) => {
-      const newTasks = [...prevTasks];
-      newTasks[taskIndex] = {
-        ...newTasks[taskIndex],
-        title: taskTitle,
-        description: taskDescription,
-      };
-      return newTasks;
-    });
-    setEditingTask(false);
   };
 
   return (
@@ -131,7 +168,7 @@ function Column({ column, deleteColumn, updateColumn }) {
       />
       <TaskModal
         open={isModalOpen}
-        handleClose={() => isModalOpen(false)}
+        handleClose={() => setIsModalOpen(false)}
         taskTitle={taskTitle}
         setTaskTitle={setTaskTitle}
         taskDescription={taskDescription}
@@ -146,8 +183,12 @@ function Column({ column, deleteColumn, updateColumn }) {
       <Container>
         <Droppable droppableId={column.id} type="task">
           {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              {columnTasks.map((task, index) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              style={{ minHeight: "100px", backgroundColor: "#f7f7f7" }}
+            >
+              {tasks.map((task, index) => (
                 <Draggable draggableId={task.id} index={index} key={task.id}>
                   {(provided) => (
                     <div
@@ -163,14 +204,14 @@ function Column({ column, deleteColumn, updateColumn }) {
                         boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
                         transition: "all 0.2s",
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#e6e6e6";
-                        e.currentTarget.style.boxShadow =
+                      onMouseEnter={(event) => {
+                        event.currentTarget.style.backgroundColor = "#e6e6e6";
+                        event.currentTarget.style.boxShadow =
                           "0px 2px 6px rgba(0,0,0,0.15)";
                       }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#ffffff";
-                        e.currentTarget.style.boxShadow =
+                      onMouseLeave={(event) => {
+                        event.currentTarget.style.backgroundColor = "#ffffff";
+                        event.currentTarget.style.boxShadow =
                           "0px 1px 3px rgba(0,0,0,0.1)";
                       }}
                     >

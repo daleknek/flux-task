@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import Column from "./Column";
 import { Button, Container } from "@mui/material";
-import { Droppable, Draggable, DragDropContext } from "react-beautiful-dnd";
+import { DragDropContext } from "react-beautiful-dnd";
 import { v4 as uuid } from "uuid";
 import Header from "./Header";
 import Footer from "./Footer";
 import { reorder } from "./utils/reorder.js";
 import { move } from "./utils/move.js";
 import { useColumnsData } from "./LocalContext";
-import { type } from "@testing-library/user-event/dist/type";
 
 function Board() {
   const [boardName, setBoardName] = useState("");
@@ -43,7 +42,9 @@ function Board() {
   };
 
   const handleDeleteColumn = (columnId) => {
-    setColumnsData(columnsData.filter((column) => column.id !== columnId));
+    const columns = { ...columnsData };
+    delete columns[columnId];
+    setColumnsData(columns);
   };
 
   const handleUpdateColumn = (columnId, updatedColumnData) => {
@@ -55,13 +56,14 @@ function Board() {
 
   const onDragEnd = (result) => {
     const { source, destination } = result;
-    const columns = { ...columnsData };
-    const columnsArray = Object.values(columns);
 
     // If the item is dropped outside the list, do nothing.
     if (!destination) {
       return;
     }
+
+    // console.log("Source:", source);
+    // console.log("Destination:", destination);
 
     // If the item is dropped onto the same place, do nothing.
     if (
@@ -71,65 +73,56 @@ function Board() {
       return;
     }
 
-    // Handle column reordering
-    if (
-      source.droppableId === "droppable-columns" &&
-      destination.droppableId === "droppable-columns"
-    ) {
-      const reorderedColumnsArray = reorder(
-        columnsArray,
-        source.index,
-        destination.index
-      );
+    const startColumn = columnsData[source.droppableId];
+    const finishColumn = columnsData[destination.droppableId];
 
-      const reorderedColumns = {};
-      reorderedColumnsArray.forEach((item) => {
-        reorderedColumns[item.id] = item;
-      });
+    // console.log("Start Column Tasks Before:", startColumn.tasks);
+    // console.log("Finish Column Tasks Before:", finishColumn.tasks);
 
-      setColumnsData(reorderedColumns);
-      return;
-    }
-
-    const startColumn =  columns[source.droppableId];
-    
-    const finishColumn =  columns[destination.droppableId];
-
+    // If reordering tasks within the same column
     if (startColumn.id === finishColumn.id) {
-      // Reordering tasks within the same column
-
       const reorderedTasks = reorder(
-        startColumn,
+        startColumn.tasks,
         source.index,
         destination.index
       );
 
-      const updatedColumn = {
-        ...startColumn,
-        tasks: reorderedTasks,
+      const updatedColumns = {
+        ...columnsData,
+        [startColumn.id]: {
+          ...startColumn,
+          tasks: reorderedTasks,
+        },
       };
-      // setColumnsData([...columns, updatedColumn]);
-
+      setColumnsData(updatedColumns);
     } else {
-      // Moving tasks between columns
-      const result = move(
+      // console.log("Moving between columns");
+      // If moving tasks between columns
+      const moveResult = move(
         startColumn.tasks,
         finishColumn.tasks,
         source,
         destination
       );
 
-      setColumnsData((prevColumns) => {
-        return prevColumns.map((col) => {
-          if (col.id === startColumn.id) {
-            return { ...col, tasks: result.updatedSource };
-          }
-          if (col.id === finishColumn.id) {
-            return { ...col, tasks: result.updatedDest };
-          }
-          return col;
-        });
-      });
+      // console.log("Move Result:", moveResult);
+
+      const updatedColumns = {
+        ...columnsData,
+        [startColumn.id]: {
+          ...startColumn,
+          tasks: moveResult.updatedSource,
+        },
+        [finishColumn.id]: {
+          ...finishColumn,
+          tasks: moveResult.updatedDest,
+        },
+      };
+
+      // console.log("Updated Start Column:", updatedColumns[startColumn.id]);
+      // console.log("Updated Finish Column:", updatedColumns[finishColumn.id]);
+
+      setColumnsData(updatedColumns);
     }
   };
 
@@ -167,53 +160,20 @@ function Board() {
         >
           Add column
         </Button>
-        <Container>
-          <Droppable
-            droppableId="droppable-columns"
-            direction="horizontal"
-            type="column"
-          >
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                style={{
-                  display: "flex",
-                  flexWrap: "nowrap",
-                  minHeight: "600px",
-                }}
-              >
-                {Object.keys(columnsData).map((key, index) => {
-                  const column = columnsData[key];
-
-                  return (
-                    <Draggable
-                      key={`draggable-${column.id}`}
-                      draggableId={String(column.id)}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          key={`column-wrapper-${column.id}`}
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <Column
-                            key={`column-${column.id}`}
-                            column={column}
-                            deleteColumn={() => handleDeleteColumn(column.id)}
-                            updateColumn={handleUpdateColumn}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
-                  );
-                })}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+        <Container
+          style={{ display: "flex", flexWrap: "nowrap", minHeight: "100px" }}
+        >
+          {Object.keys(columnsData).map((key) => {
+            const column = columnsData[key];
+            return (
+              <Column
+                key={column.id}
+                column={column}
+                deleteColumn={() => handleDeleteColumn(column.id)}
+                updateColumn={handleUpdateColumn}
+              />
+            );
+          })}
         </Container>
       </DragDropContext>
       <Footer />
