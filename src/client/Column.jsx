@@ -18,10 +18,9 @@ function Column({ column, deleteColumn }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskId, setTaskId] = useState("");
   const [columnsData, setColumnsData] = useColumnsData();
-
-  // useEffect(() => {
-  //   console.log("Component re-rendered!", columnsData);
-  // }, [columnsData]);
+  const [editingTaskId, setEditingTaskId] = useState("");
+  // This can be set when a user chooses to edit a task.
+  // It should be set to null when the user is not editing a task.
 
   //Column functions
 
@@ -50,27 +49,69 @@ function Column({ column, deleteColumn }) {
   //Task functions
 
   const handleCreateTask = (taskTitle, taskDescription) => {
-    if (editingTask) {
-      handleUpdateTask(taskId);
-    } else {
-      const newTask = {
-        id: uuid(),
-        title: taskTitle,
-        description: taskDescription,
-        columnId: column.id,
-      };
+    const newTask = {
+      id: uuid(),
+      title: taskTitle,
+      description: taskDescription,
+      columnId: column.id,
+    };
 
-      // updates the respective column in columnsData global state to reflect the new task
-      const updatedColumnsData = {
-        ...columnsData,
-        [column.id]: {
-          ...columnsData[column.id],
-          tasks: [...tasks, newTask],
-        },
-      };
-      setColumnsData(updatedColumnsData);
-    }
+    // updates the respective column in columnsData global state to reflect the new task
+    const updatedColumnsData = {
+      ...columnsData,
+      [column.id]: {
+        ...columnsData[column.id],
+        tasks: [...tasks, newTask],
+      },
+    };
+    setColumnsData(updatedColumnsData);
 
+    setIsModalOpen(false);
+  };
+
+  const handleEditClick = (task) => {
+    setEditingTask(true);
+    setTaskId(task.id);
+    setTaskTitle(task.title);
+    setTaskDescription(task.description);
+    setEditingTaskId(task.id);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateTask = (taskId, updatedTitle, updatedDescription) => {
+    console.log("Task ID:", taskId);
+
+    // Find the index of the task we want to update
+    // const task = column.tasks.find((task) => task.id === taskId);
+
+    // If the task was not found, exit early
+    // if (task === -1) return;
+
+    // Copy the current column's tasks and modify the one we want to update
+    const tasks = [...column.tasks];
+    const taskIndex = tasks.findIndex((task) => task.id === taskId);
+    tasks[taskIndex] = {
+      ...tasks[taskIndex],
+      title: updatedTitle,
+      description: updatedDescription,
+    };
+
+    // Update the global state with the modified tasks
+    const updatedColumnsData = {
+      ...columnsData,
+      [column.id]: {
+        ...columnsData[column.id],
+        tasks: tasks,
+      },
+    };
+
+    setColumnsData(updatedColumnsData);
+
+    console.log("Updated task:", tasks);
+    console.log("Updated columns data:", updatedColumnsData);
+
+    // Reset the editing state
+    setEditingTask(false);
     setIsModalOpen(false);
   };
 
@@ -85,44 +126,6 @@ function Column({ column, deleteColumn }) {
       },
     };
     setColumnsData(updatedColumnsData);
-  };
-
-  const handleUpdateTask = (taskId) => {
-    // Find the index of the task we want to update
-    const taskIndex = column.tasks.findIndex((task) => task.id === taskId);
-
-    // If the task was not found, exit early
-    if (taskIndex === -1) return;
-
-    // Copy the current column's tasks and modify the one we want to update
-    const updatedTasks = [...column.tasks];
-    updatedTasks[taskIndex] = {
-      ...updatedTasks[taskIndex],
-      title: taskTitle,
-      description: taskDescription,
-    };
-
-    // Update the global state with the modified tasks
-    const updatedColumnsData = {
-      ...columnsData,
-      [column.id]: {
-        ...columnsData[column.id],
-        tasks: updatedTasks,
-      },
-    };
-
-    setColumnsData(updatedColumnsData);
-
-    // Reset the editing state
-    setEditingTask(false);
-  };
-
-  const handleEditClick = (task) => {
-    setIsModalOpen(true);
-    setEditingTask(true);
-    setTaskId(task.id);
-    setTaskTitle(task.title);
-    setTaskDescription(task.description);
   };
 
   return (
@@ -173,8 +176,10 @@ function Column({ column, deleteColumn }) {
         setTaskTitle={setTaskTitle}
         taskDescription={taskDescription}
         setTaskDescription={setTaskDescription}
-        createTask={handleCreateTask}
         columnId={column.id}
+        taskId={editingTaskId}
+        createTask={handleCreateTask}
+        updateTask={handleUpdateTask}
       />
       <Button onClick={() => setIsModalOpen(true)} startIcon={<AddIcon />}>
         Add Task

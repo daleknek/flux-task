@@ -27,14 +27,6 @@ function TaskCard({ task, onDelete, onEdit }) {
         >
           {task.title}
         </h3>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "gray",
-            fontFamily: "Roboto, sans-serif",
-          }}
-          dangerouslySetInnerHTML={{ __html: task.description }}
-        />
       </div>
       <div style={{ display: "flex", alignItems: "center" }}>
         <Button
