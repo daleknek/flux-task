@@ -32,7 +32,6 @@ function Header({
             </Typography>
           )}
         </div>
-        <div></div>{" "}
       </Toolbar>
     </AppBar>
   );

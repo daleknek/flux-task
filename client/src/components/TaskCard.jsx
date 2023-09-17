@@ -2,33 +2,21 @@ import React from "react";
 import { Button } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import styles from "./TaskCard.module.css";
 
 function TaskCard({ task, onDelete, onEdit }) {
   return (
-    <div
-      style={{
-        padding: "10px",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
-        marginBottom: "8px",
-        backgroundColor: "#f9f9f9",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <div>
-        <h3
-          style={{
-            color: "#0079bf",
-            fontSize: "20px",
-            fontFamily: "Roboto, sans-serif",
-          }}
-        >
-          {task.title}
-        </h3>
-      </div>
-      <div style={{ display: "flex", alignItems: "center" }}>
+    <div className={styles.card}>
+      <h3
+        style={{
+          color: "#0079bf",
+          fontSize: "20px",
+          margin: "0",
+        }}
+      >
+        {task.title}
+      </h3>
+      <div style={{ alignSelf: "flex-end" }}>
         <Button
           size="small"
           onClick={() => onEdit(task)}

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Button, Modal, TextField } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import styles from "./TaskModal.module.css";
+import dayjs from "dayjs";
 
 function TaskModal({
   open,
@@ -17,7 +19,7 @@ function TaskModal({
   updateTask,
   taskId,
 }) {
-  const [startDate, setStartDate] = useState(null);
+  const [value, setValue] = useState(dayjs());
 
   return (
     <Modal open={open} onClose={handleClose} className={styles.modal}>
@@ -30,13 +32,14 @@ function TaskModal({
               onChange={(event) => setTaskTitle(event.target.value)}
               style={{ flexGrow: 1 }}
             />
-            due date:
-            <DatePicker
-              showIcon
-              dateFormat="dd/MM/yyyy"
-              selected={startDate}
-              onChange={(date) => setStartDate(date)}
-            />
+            <p>Due Date:</p>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Calendar"
+                value={value}
+                onChange={(newValue) => setValue(newValue)}
+              />
+            </LocalizationProvider>
           </div>
           <ReactQuill
             style={{ width: "100%", height: "500px", marginBottom: "50px" }}
@@ -53,7 +56,6 @@ function TaskModal({
             </Button>
           ) : (
             <Button
-              style={{ marginLeft: "10px" }}
               variant="contained"
               color="success"
               onClick={() => updateTask(taskId, taskTitle, taskDescription)}

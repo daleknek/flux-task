@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import Column from "./Column";
-import { Button, Container } from "@mui/material";
+import { Button } from "@mui/material";
 import { DragDropContext } from "react-beautiful-dnd";
 import { v4 as uuid } from "uuid";
 import Header from "./Header";
 import Footer from "./Footer";
-import { reorder } from "./utils/reorder.js";
-import { move } from "./utils/move.js";
+import { reorder } from "../utils/reorder";
+import { move } from "../utils/move";
 import { useColumnsData } from "./LocalContext";
+import { Outlet } from "react-router-dom";
 
 function Board() {
   const [boardName, setBoardName] = useState("");
   const [isEditingBoardName, setIsEditingBoardName] = useState(true);
   const [columnsData, setColumnsData] = useColumnsData([]);
   const [columnName] = useState("");
+  const [columnWip] = useState("");
 
   //Board functions
 
@@ -35,7 +37,12 @@ function Board() {
   //Column functions
 
   const handleCreateColumn = () => {
-    const newColumn = { id: uuid(), name: columnName, tasks: [] };
+    const newColumn = {
+      id: uuid(),
+      name: columnName,
+      wip: columnWip,
+      tasks: [],
+    };
     const columns = { ...columnsData };
     columns[newColumn.id] = newColumn;
     setColumnsData(columns);
@@ -62,9 +69,6 @@ function Board() {
       return;
     }
 
-    // console.log("Source:", source);
-    // console.log("Destination:", destination);
-
     // If the item is dropped onto the same place, do nothing.
     if (
       source.droppableId === destination.droppableId &&
@@ -75,9 +79,6 @@ function Board() {
 
     const startColumn = columnsData[source.droppableId];
     const finishColumn = columnsData[destination.droppableId];
-
-    // console.log("Start Column Tasks Before:", startColumn.tasks);
-    // console.log("Finish Column Tasks Before:", finishColumn.tasks);
 
     // If reordering tasks within the same column
     if (startColumn.id === finishColumn.id) {
@@ -96,7 +97,6 @@ function Board() {
       };
       setColumnsData(updatedColumns);
     } else {
-      // console.log("Moving between columns");
       // If moving tasks between columns
       const moveResult = move(
         startColumn.tasks,
@@ -104,8 +104,6 @@ function Board() {
         source,
         destination
       );
-
-      // console.log("Move Result:", moveResult);
 
       const updatedColumns = {
         ...columnsData,
@@ -119,64 +117,73 @@ function Board() {
         },
       };
 
-      // console.log("Updated Start Column:", updatedColumns[startColumn.id]);
-      // console.log("Updated Finish Column:", updatedColumns[finishColumn.id]);
-
       setColumnsData(updatedColumns);
     }
   };
 
   return (
     <>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Header
-          boardName={boardName}
-          isEditingBoardName={isEditingBoardName}
-          editBoardName={editBoardName}
-          handleBoardNameChange={handleBoardNameChange}
-          handleKeyDownBoardName={handleKeyDownBoardName}
-        />
-
-        <Button
-          onClick={(event) => handleCreateColumn(event)}
-          variant="outlined"
-          style={{
-            marginTop: "20px",
-            backgroundColor: "#f4f5f7",
-            borderRadius: "5px",
-            width: "250px",
-            padding: "10px",
-            opacity: "0.7",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            margin: "10px 5px",
-            boxSizing: "border-box",
-            overflowY: "auto",
-            flexShrink: 0,
-            height: "auto",
-          }}
-        >
-          Add column
-        </Button>
-        <Container
-          style={{ display: "flex", flexWrap: "nowrap", minHeight: "100px" }}
-        >
-          {Object.keys(columnsData).map((key) => {
-            const column = columnsData[key];
-            return (
-              <Column
-                key={column.id}
-                column={column}
-                deleteColumn={() => handleDeleteColumn(column.id)}
-                updateColumn={handleUpdateColumn}
-              />
-            );
-          })}
-        </Container>
-      </DragDropContext>
-      <Footer />
+      <Header
+        boardName={boardName}
+        isEditingBoardName={isEditingBoardName}
+        editBoardName={editBoardName}
+        handleBoardNameChange={handleBoardNameChange}
+        handleKeyDownBoardName={handleKeyDownBoardName}
+      />
+      <div
+        style={{
+          overflowX: "auto",
+          padding: "24px",
+          maxHeight: "100%",
+        }}
+      >
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Button
+            onClick={(event) => handleCreateColumn(event)}
+            variant="outlined"
+            style={{
+              marginTop: "20px",
+              backgroundColor: "#f4f5f7",
+              borderRadius: "5px",
+              width: "250px",
+              padding: "10px",
+              opacity: "0.7",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              margin: "10px 5px",
+              boxSizing: "border-box",
+              overflowY: "auto",
+              flexShrink: 0,
+              height: "auto",
+            }}
+          >
+            Add column
+          </Button>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "nowrap",
+              minHeight: "100px",
+            }}
+          >
+            {Object.keys(columnsData).map((key) => {
+              const column = columnsData[key];
+              return (
+                <Column
+                  key={column.id}
+                  column={column}
+                  deleteColumn={() => handleDeleteColumn(column.id)}
+                  updateColumn={handleUpdateColumn}
+                />
+              );
+            })}
+          </div>
+        </DragDropContext>
+        <Footer />
+        <Outlet />
+      </div>
     </>
   );
 }
