@@ -10,6 +10,10 @@ boardsController.getUserBoard = async (req, res) => {
     const board = await Board.findOne({ user: userId }).populate({
       path: "columns",
       model: "Column",
+      populate: {
+        path: "tasks",
+        model: "Task",
+      },
     });
     if (!board) {
       return res.status(404).json({ board: {} });

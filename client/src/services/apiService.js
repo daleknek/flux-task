@@ -78,9 +78,9 @@ export const fetchColumns = async () => {
 export const fetchMultipleUrls = async () => {
   try {
     const urls = ["/boards", "/columns"];
-    const promises = urls.map((url) => axios.get(url));
+    const promises = urls.map((url) => api.get(url));
     const results = await Promise.all(promises);
-    results.forEach((result) => console.log(result.data));
+    results.forEach((result) => console.log("Results:", result.data));
   } catch (error) {
     console.error(error);
   }

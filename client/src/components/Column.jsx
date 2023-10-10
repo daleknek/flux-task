@@ -80,19 +80,6 @@ function Column({ column, deleteColumn }) {
 
   //=================================================================================================
 
-  // useEffect(() => {
-  //   const fetchColumnData = async () => {
-  //     try {
-  //       const response = await fetchColumns();
-  //       console.log(response);
-  //     } catch (error) {
-  //       console.error("Error fetching board details:", error);
-  //     }
-  //   };
-
-  //   fetchColumnData();
-  // }, []);
-
   const tasks = column.tasks || [];
 
   const handleCreateTask = async () => {
@@ -108,9 +95,12 @@ function Column({ column, deleteColumn }) {
       const createdTask = response.data;
 
       const updatedColumnTaskData = {
-        tasks: [{ ...column.tasks, createdTask }],
+        tasks: [...column.tasks, createdTask],
       };
-      await updateColumn(column._id, updatedColumnTaskData);
+
+      console.log(column._id);
+      const response2 = await updateColumn(column._id, updatedColumnTaskData);
+      console.log(response2);
 
       const updatedColumnsData = columnsData.map((col) => {
         if (col._id === column._id) {
@@ -122,7 +112,7 @@ function Column({ column, deleteColumn }) {
         return col;
       });
 
-      setColumnsData([{ ...updatedColumnsData, createdTask }]);
+      setColumnsData(updatedColumnsData);
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error creating task:", error);
@@ -326,7 +316,7 @@ function Column({ column, deleteColumn }) {
         columnId={column._id}
         taskId={editingTaskId}
         createTask={handleCreateTask}
-        // updateTask={handleUpdateTask}
+        updateTask={handleUpdateTask}
       />
     </>
   );

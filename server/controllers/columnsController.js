@@ -13,7 +13,7 @@ columnsController.getAllColumns = async (req, res) => {
       model: "Task",
     });
     res.status(200).json(columns);
-    // console.log("My columns: ", columns);
+    console.log("My columns: ", columns);
   } catch (error) {
     res.status(400).json({ error: "Failed to fetch columns" });
   }
@@ -64,11 +64,12 @@ columnsController.createNewColumn = async (req, res) => {
 
 // Update a column by ID
 columnsController.updateColumn = async (req, res) => {
+  console.log(req);
   try {
     const updatedColumn = await Column.findByIdAndUpdate(
       req.params.columnId,
       req.body,
-      { $push: { tasks: req.body.taskId } },
+      // { $push: { tasks: req.body.taskId } },
       { new: true }
     );
     if (!updatedColumn) {

@@ -13,6 +13,7 @@ import {
   updateBoardName,
   createColumn,
   deleteColumn,
+  fetchMultipleUrls,
 } from "../services/apiService";
 
 function Board() {
@@ -25,6 +26,7 @@ function Board() {
     const fetchBoard = async () => {
       try {
         const response = await initializeBoard();
+
         setBoardId(response._id);
         setBoardName(response.name);
         setColumnsData(response.columns);
