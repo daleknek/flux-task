@@ -7,7 +7,10 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:3000",
+};
+app.use(cors(corsOptions));
 app.use(express.json()); // To parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 
@@ -26,12 +29,14 @@ const userRoutes = require("./routes/userRoutes");
 const boardRoutes = require("./routes/boardRoutes");
 const columnRoutes = require("./routes/columnRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 app.use((req, res, next) => {
   console.log("Middle log:", req.body);
   next();
 });
 
+app.use(authRoutes);
 app.use("/users", userRoutes);
 app.use("/boards", boardRoutes);
 app.use("/columns", columnRoutes);

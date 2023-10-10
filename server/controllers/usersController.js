@@ -75,13 +75,22 @@ usersController.deleteUser = async (req, res) => {
 // Sign up user
 usersController.signUp = async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { email, username, password, adminSecret } = req.body;
+
+    // If the adminSecret matches, assign admin role
+    if (adminSecret === process.env.ADM_PASS) {
+      req.body.role = "admin";
+    }
+
+    const user = new User({ email, username, password, role: req.body.role });
     await user.save();
+
     res.status(201).send({ message: "User registered successfully!" });
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({ error: error.message });
   }
 };
+
 const SECRET = process.env.JWT_SECRET;
 
 // Log in user
@@ -99,7 +108,7 @@ usersController.logIn = async (req, res) => {
     const token = jwt.sign({ _id: user._id }, SECRET, {
       expiresIn: "1h",
     });
-    res.send({ token });
+    res.send({ _id: user._id, token });
   } catch (error) {
     console.log(error);
     res.status(500).send("Server error");

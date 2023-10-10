@@ -1,29 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Column from "./Column";
 import { Button } from "@mui/material";
 import { DragDropContext } from "react-beautiful-dnd";
-import { v4 as uuid } from "uuid";
 import Header from "./Header";
 import Footer from "./Footer";
 import { reorder } from "../utils/reorder";
 import { move } from "../utils/move";
 import { useColumnsData } from "./LocalContext";
 import { Outlet } from "react-router-dom";
+import {
+  initializeBoard,
+  updateBoardName,
+  createColumn,
+  deleteColumn,
+} from "../services/apiService";
 
 function Board() {
+  const [boardId, setBoardId] = useState(null);
   const [boardName, setBoardName] = useState("");
   const [isEditingBoardName, setIsEditingBoardName] = useState(true);
   const [columnsData, setColumnsData] = useColumnsData([]);
-  const [columnName] = useState("");
-  const [columnWip] = useState("");
 
-  //Board functions
+  useEffect(() => {
+    const fetchBoard = async () => {
+      try {
+        const response = await initializeBoard();
+        setBoardId(response._id);
+        setBoardName(response.name);
+        setColumnsData(response.columns);
+        console.log(response);
+      } catch (error) {
+        console.error("Error fetching board details:", error);
+      }
+    };
+
+    fetchBoard();
+  }, []);
+
+  useEffect(() => {
+    // Handler to be called after a delay
+    const handler = setTimeout(() => {
+      if (boardName) {
+        try {
+          updateBoardName(boardId, boardName);
+        } catch (error) {
+          console.error("Error updating board name:", error);
+        }
+      }
+    }, 300);
+
+    // Cleanup function to clear the timeout
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [boardName, boardId]);
 
   const handleBoardNameChange = (event) => {
     setBoardName(event.target.value);
   };
 
-  const handleKeyDownBoardName = (event) => {
+  const handleKeyDownBoardName = async (event) => {
     if (event.key === "Enter") {
       setIsEditingBoardName(false);
       event.preventDefault();
@@ -34,32 +70,45 @@ function Board() {
     setIsEditingBoardName(true);
   };
 
-  //Column functions
+  //=================================================================================================
 
-  const handleCreateColumn = () => {
+  const handleCreateColumn = async () => {
     const newColumn = {
-      id: uuid(),
-      name: columnName,
-      wip: columnWip,
+      name: "",
+      wip: "",
       tasks: [],
+      board: boardId,
     };
-    const columns = { ...columnsData };
-    columns[newColumn.id] = newColumn;
-    setColumnsData(columns);
+
+    try {
+      const response = await createColumn(newColumn);
+      const createdColumn = response.data;
+      setColumnsData([...columnsData, createdColumn]);
+    } catch (error) {
+      console.error("Error creating column:", error);
+    }
   };
 
-  const handleDeleteColumn = (columnId) => {
-    const columns = { ...columnsData };
-    delete columns[columnId];
-    setColumnsData(columns);
+  const handleDeleteColumn = async (columnId) => {
+    try {
+      await deleteColumn(columnId);
+      const updatedColumn = columnsData.filter((column) => {
+        return column._id !== columnId;
+      });
+      setColumnsData(updatedColumn);
+    } catch (error) {
+      console.error("Error deleting column:", error);
+    }
   };
 
-  const handleUpdateColumn = (columnId, updatedColumnData) => {
-    const columns = { ...columnsData };
-    columns[columnId] = updatedColumnData;
+  // const handleUpdateColumn = (columnId, updatedColumnData) => {
+  //   const columns = { ...columnsData };
+  //   columns[columnId] = updatedColumnData;
 
-    setColumnsData(columns);
-  };
+  //   setColumnsData(columns);
+  // };
+
+  //=================================================================================================
 
   const onDragEnd = (result) => {
     const { source, destination } = result;
@@ -81,7 +130,7 @@ function Board() {
     const finishColumn = columnsData[destination.droppableId];
 
     // If reordering tasks within the same column
-    if (startColumn.id === finishColumn.id) {
+    if (startColumn.columnId === finishColumn.columnId) {
       const reorderedTasks = reorder(
         startColumn.tasks,
         source.index,
@@ -90,7 +139,7 @@ function Board() {
 
       const updatedColumns = {
         ...columnsData,
-        [startColumn.id]: {
+        [startColumn.columnId]: {
           ...startColumn,
           tasks: reorderedTasks,
         },
@@ -107,11 +156,11 @@ function Board() {
 
       const updatedColumns = {
         ...columnsData,
-        [startColumn.id]: {
+        [startColumn.columnId]: {
           ...startColumn,
           tasks: moveResult.updatedSource,
         },
-        [finishColumn.id]: {
+        [finishColumn.columnId]: {
           ...finishColumn,
           tasks: moveResult.updatedDest,
         },
@@ -129,6 +178,7 @@ function Board() {
         editBoardName={editBoardName}
         handleBoardNameChange={handleBoardNameChange}
         handleKeyDownBoardName={handleKeyDownBoardName}
+        showLogout={true}
       />
       <div
         style={{
@@ -168,14 +218,12 @@ function Board() {
               minHeight: "100px",
             }}
           >
-            {Object.keys(columnsData).map((key) => {
-              const column = columnsData[key];
+            {Object.values(columnsData).map((column) => {
               return (
                 <Column
-                  key={column.id}
+                  key={column._id}
                   column={column}
-                  deleteColumn={() => handleDeleteColumn(column.id)}
-                  updateColumn={handleUpdateColumn}
+                  deleteColumn={() => handleDeleteColumn(column._id)}
                 />
               );
             })}

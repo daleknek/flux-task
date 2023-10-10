@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Typography, Input } from "@mui/material";
 import { Droppable, Draggable } from "react-beautiful-dnd";
-import { v4 as uuid } from "uuid";
 import TaskModal from "./TaskModal";
 import TaskCard from "./TaskCard";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -9,18 +8,28 @@ import AddIcon from "@mui/icons-material/Add";
 import { useColumnsData } from "./LocalContext";
 import styles from "./Column.module.css";
 import dayjs from "dayjs";
+import {
+  updateColumnName,
+  updateColumnWipLimit,
+  createTask,
+  deleteTask,
+  updateTask,
+  fetchColumns,
+  updateColumn,
+  fetchTasks,
+} from "../services/apiService";
 
 function Column({ column, deleteColumn }) {
   const [taskTitle, setTaskTitle] = useState("To Do");
   const [taskDescription, setTaskDescription] = useState("");
   const [dueDate, setDueDate] = useState(dayjs());
   const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState(column.name);
+  const [editedName, setEditedName] = useState("");
   const [editingTask, setEditingTask] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [columnsData, setColumnsData] = useColumnsData();
   const [editingTaskId, setEditingTaskId] = useState("");
-  const [wipLimit, setWIPLimit] = useState(column.wip || "5");
+  const [wipLimit, setWIPLimit] = useState("5");
   const [isEditingWIPLimit, setIsEditingWIPLimit] = useState(false);
 
   //Column functions
@@ -33,16 +42,18 @@ function Column({ column, deleteColumn }) {
     setIsEditingName(true);
   };
 
-  const handleNameSave = () => {
+  const handleNameSave = async () => {
     setIsEditingName(false);
-    const updatedColumnsData = {
-      ...columnsData,
-      [column.id]: {
-        ...columnsData[column.id],
-        name: editedName,
-      },
-    };
-    setColumnsData(updatedColumnsData);
+
+    try {
+      await updateColumnName(column._id, editedName);
+      const updatedArray = columnsData.map((item, index) =>
+        item._id === column._id ? { ...item, name: editedName } : item
+      );
+      setColumnsData(updatedArray);
+    } catch (error) {
+      console.error("Error updating column name:", error);
+    }
   };
 
   const handleWipChange = (event) => {
@@ -53,44 +64,128 @@ function Column({ column, deleteColumn }) {
     setIsEditingWIPLimit(true);
   };
 
-  const handleSaveWipLimit = () => {
+  const handleSaveWipLimit = async () => {
     setIsEditingWIPLimit(false);
 
-    // Update the WIP limit in your columns' context data
-    const updatedColumnsData = {
-      ...columnsData,
-      [column.id]: {
-        ...columnsData[column.id],
-        wip: wipLimit,
-      },
-    };
-    setColumnsData(updatedColumnsData);
+    try {
+      await updateColumnWipLimit(column._id, wipLimit);
+      const updatedArray = columnsData.map((item, index) =>
+        item._id === column._id ? { ...item, wip: wipLimit } : item
+      );
+      setColumnsData(updatedArray);
+    } catch (error) {
+      console.error("Error updating WIP limit:", error);
+    }
   };
+
+  //=================================================================================================
+
+  // useEffect(() => {
+  //   const fetchColumnData = async () => {
+  //     try {
+  //       const response = await fetchColumns();
+  //       console.log(response);
+  //     } catch (error) {
+  //       console.error("Error fetching board details:", error);
+  //     }
+  //   };
+
+  //   fetchColumnData();
+  // }, []);
 
   const tasks = column.tasks || [];
 
-  //Task functions
-
-  const handleCreateTask = (taskTitle, taskDescription) => {
+  const handleCreateTask = async () => {
     const newTask = {
-      id: uuid(),
       title: taskTitle,
       description: taskDescription,
-      date: dayjs().format("DD/MM/YYYY"),
-      columnId: column.id,
+      date: dayjs().format("MM/DD/YYYY"),
+      column: column._id,
     };
 
-    // updates the respective column in columnsData global state to reflect the new task
-    const updatedColumnsData = {
-      ...columnsData,
-      [column.id]: {
-        ...columnsData[column.id],
-        tasks: [...tasks, newTask],
-      },
-    };
-    setColumnsData(updatedColumnsData);
+    try {
+      const response = await createTask(newTask);
+      const createdTask = response.data;
 
+      const updatedColumnTaskData = {
+        tasks: [{ ...column.tasks, createdTask }],
+      };
+      await updateColumn(column._id, updatedColumnTaskData);
+
+      const updatedColumnsData = columnsData.map((col) => {
+        if (col._id === column._id) {
+          return {
+            ...col,
+            tasks: [...col.tasks, createdTask],
+          };
+        }
+        return col;
+      });
+
+      setColumnsData([{ ...updatedColumnsData, createdTask }]);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
+  };
+
+  const handleUpdateTask = async (taskId, updatedTitle, updatedDescription) => {
+    try {
+      // Fetch the current task data
+      const response = await fetchTasks(taskId);
+      const currentTaskData = response.data;
+
+      // Update the fetched data
+      currentTaskData.title = updatedTitle;
+      currentTaskData.description = updatedDescription;
+
+      // Send the updated data back to the server
+      await updateTask(taskId, currentTaskData);
+
+      // Update the local state to reflect the change
+      const updatedColumnsData = columnsData.map((col) => {
+        if (col._id === column._id) {
+          // If this is the column containing the task to be updated,
+          // map over its tasks to find and update the relevant task
+          return {
+            ...col,
+            tasks: col.tasks.map(
+              (task) =>
+                task._id === taskId
+                  ? currentTaskData // Update the relevant task
+                  : task // Leave other tasks unchanged
+            ),
+          };
+        }
+        return col; // Leave other columns unchanged
+      });
+
+      setColumnsData(updatedColumnsData);
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+
+    // Reset the editing state
+    setEditingTask(false);
     setIsModalOpen(false);
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await deleteTask(taskId);
+
+      const updatedTasks = tasks.filter((task) => task.id !== taskId);
+      const updatedColumnsData = {
+        ...columnsData,
+        [column._id]: {
+          ...columnsData[column._id],
+          tasks: updatedTasks,
+        },
+      };
+      setColumnsData(updatedColumnsData);
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
   };
 
   const handleEditClick = (task) => {
@@ -99,44 +194,6 @@ function Column({ column, deleteColumn }) {
     setTaskDescription(task.description);
     setEditingTaskId(task.id);
     setIsModalOpen(true);
-  };
-
-  const handleUpdateTask = (taskId, updatedTitle, updatedDescription) => {
-    // Copy the current column's tasks and modify the one we want to update
-    const tasks = [...column.tasks];
-    const taskIndex = tasks.findIndex((task) => task.id === taskId);
-    tasks[taskIndex] = {
-      ...tasks[taskIndex],
-      title: updatedTitle,
-      description: updatedDescription,
-    };
-
-    // Update the global state with the modified tasks
-    const updatedColumnsData = {
-      ...columnsData,
-      [column.id]: {
-        ...columnsData[column.id],
-        tasks: tasks,
-      },
-    };
-
-    setColumnsData(updatedColumnsData);
-    // Reset the editing state
-    setEditingTask(false);
-    setIsModalOpen(false);
-  };
-
-  const handleDeleteTask = (taskId) => {
-    // updates the global columnsData
-    const updatedTasks = tasks.filter((task) => task.id !== taskId);
-    const updatedColumnsData = {
-      ...columnsData,
-      [column.id]: {
-        ...columnsData[column.id],
-        tasks: updatedTasks,
-      },
-    };
-    setColumnsData(updatedColumnsData);
   };
 
   return (
@@ -210,7 +267,7 @@ function Column({ column, deleteColumn }) {
         </div>
 
         <div className={styles.container}>
-          <Droppable droppableId={column.id} type="task">
+          <Droppable droppableId={column._id} type="task">
             {(provided) => (
               <div
                 ref={provided.innerRef}
@@ -218,7 +275,11 @@ function Column({ column, deleteColumn }) {
                 style={{ minHeight: "100px" }}
               >
                 {tasks.map((task, index) => (
-                  <Draggable draggableId={task.id} index={index} key={task.id}>
+                  <Draggable
+                    draggableId={task._id}
+                    index={index}
+                    key={task._id}
+                  >
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
@@ -228,7 +289,7 @@ function Column({ column, deleteColumn }) {
                       >
                         <TaskCard
                           task={task}
-                          columnId={column.id}
+                          columnId={column._id}
                           onDelete={handleDeleteTask}
                           onEdit={handleEditClick}
                         />
@@ -262,10 +323,10 @@ function Column({ column, deleteColumn }) {
         setTaskTitle={setTaskTitle}
         taskDescription={taskDescription}
         setTaskDescription={setTaskDescription}
-        columnId={column.id}
+        columnId={column._id}
         taskId={editingTaskId}
         createTask={handleCreateTask}
-        updateTask={handleUpdateTask}
+        // updateTask={handleUpdateTask}
       />
     </>
   );

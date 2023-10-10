@@ -26,6 +26,12 @@ const userSchema = new Schema(
       trim: true,
       minlength: 3,
     },
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+    },
+
     board: { type: Schema.Types.ObjectId, ref: "Board" },
   },
   { timestamps: true }

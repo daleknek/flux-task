@@ -3,12 +3,16 @@ import { Container, TextField, Button, Typography, Box } from "@mui/material";
 import Header from "./Header";
 import Footer from "./Footer";
 import { Link } from "react-router-dom";
+import { logIn } from "../services/apiService";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -18,9 +22,16 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("User data submitted:", formData);
+    try {
+      const response = await logIn(formData);
+      console.log("Login response:", response);
+      localStorage.setItem("token", response.data.token);
+      navigate("/board");
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
   };
 
   return (
@@ -31,7 +42,6 @@ const Login = () => {
         flexDirection="column"
         height="70vh"
         justifyContent="center"
-        // alignItems="center"
       >
         <Container component="main" maxWidth="xs">
           <Typography variant="h5" align="center" gutterBottom>

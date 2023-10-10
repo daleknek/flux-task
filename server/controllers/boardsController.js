@@ -1,15 +1,28 @@
 const Board = require("../models/board.model");
+const Column = require("../models/column.model");
 
 const boardsController = {};
 
-// Get all boards of a user
-boardsController.getAllBoards = async (req, res) => {
+// Get the single board of a user
+boardsController.getUserBoard = async (req, res) => {
   try {
     const userId = req.user.id;
-    const boards = await Board.find({ user_id: userId });
-    res.status(200).json(boards);
+    const board = await Board.findOne({ user: userId }).populate({
+      path: "columns",
+      model: "Column",
+    });
+    if (!board) {
+      return res.status(404).json({ board: {} });
+    }
+
+    res.status(200).json({
+      _id: board._id,
+      name: board.name,
+      user: board.user,
+      columns: board.columns,
+    });
   } catch (error) {
-    res.status(400).json({ error: "Failed to fetch boards" });
+    res.status(400).json({ error: "Failed to fetch board" });
   }
 };
 
@@ -29,8 +42,14 @@ boardsController.getBoardById = async (req, res) => {
 // Create a new board for a user
 boardsController.createNewBoard = async (req, res) => {
   try {
-    const board = new Board(req.body);
+    const boardData = {
+      name: req.body.name,
+      user: req.user.id,
+      columns: req.body.columns || [],
+    };
+    const board = new Board(boardData);
     await board.save();
+
     res.status(201).json(board);
   } catch (error) {
     console.error("Error when creating board:", error.message);
@@ -38,21 +57,30 @@ boardsController.createNewBoard = async (req, res) => {
       .status(400)
       .json({ error: "Failed to create board", details: error.message });
   }
+  console.log("Request to create new board:", req.body);
+  console.log("User ID:", req.user._id);
 };
 
 // Update a board by ID
 boardsController.updateBoard = async (req, res) => {
   try {
+    // console.log("Request to update board with ID:", req.params.boardId);
+    // console.log("Update data:", req.body);
+
     const updatedBoard = await Board.findByIdAndUpdate(
       req.params.boardId,
       req.body,
       { new: true }
     );
+
+    // console.log("Updated board:", updatedBoard);
+
     if (!updatedBoard) {
       return res.status(404).json({ error: "Board not found" });
     }
     res.status(200).json(updatedBoard);
   } catch (error) {
+    console.error("Error in updateBoard:", error);
     res.status(400).json({ error: "Failed to update board" });
   }
 };

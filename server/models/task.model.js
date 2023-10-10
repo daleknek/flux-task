@@ -6,18 +6,12 @@ const taskSchema = new Schema(
   {
     title: {
       type: String,
-      required: true,
     },
     description: {
       type: String,
     },
     date: {
       type: Date,
-      default: Date.now,
-    },
-    member: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
     },
     column: {
       type: Schema.Types.ObjectId,

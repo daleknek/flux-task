@@ -8,8 +8,12 @@ const columnsController = {};
 columnsController.getAllColumns = async (req, res) => {
   try {
     const boardId = req.params.boardId;
-    const columns = await Column.find({ board_id: boardId });
+    const columns = await Column.find({ board: boardId }).populate({
+      path: "tasks",
+      model: "Task",
+    });
     res.status(200).json(columns);
+    // console.log("My columns: ", columns);
   } catch (error) {
     res.status(400).json({ error: "Failed to fetch columns" });
   }
@@ -31,7 +35,14 @@ columnsController.getColumnById = async (req, res) => {
 // Create a new column for a board
 columnsController.createNewColumn = async (req, res) => {
   try {
-    const column = new Column(req.body);
+    const columnData = {
+      name: req.body.name,
+      wip: req.body.wip,
+      board: req.body.board,
+      tasks: req.body.tasks || [],
+    };
+
+    const column = new Column(columnData);
     await column.save();
 
     // Update the board to reference the new column
@@ -46,6 +57,7 @@ columnsController.createNewColumn = async (req, res) => {
 
     res.status(201).json(column);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: "Failed to create column" });
   }
 };
@@ -56,6 +68,7 @@ columnsController.updateColumn = async (req, res) => {
     const updatedColumn = await Column.findByIdAndUpdate(
       req.params.columnId,
       req.body,
+      { $push: { tasks: req.body.taskId } },
       { new: true }
     );
     if (!updatedColumn) {
@@ -63,6 +76,7 @@ columnsController.updateColumn = async (req, res) => {
     }
     res.status(200).json(updatedColumn);
   } catch (error) {
+    console.error("Error in updateColumn:", error);
     res.status(400).json({ error: "Failed to update column" });
   }
 };
@@ -75,8 +89,8 @@ columnsController.deleteColumn = async (req, res) => {
       return res.status(404).json({ error: "Column not found" });
     }
 
-    // Delete all tasks associated with the column
-    await Task.deleteMany({ column: req.params.columnId });
+    // delete all tasks associated with the column
+    // await Task.deleteMany({ column: req.params.columnId });
 
     res
       .status(200)

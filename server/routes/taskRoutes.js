@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const tasksController = require("../controllers/tasksController");
-const authentication = require("../auth");
+const authentication = require("../middleware/authentication");
+const { isAdmin } = require("../middleware/authorization");
 
 router
   .route("/")

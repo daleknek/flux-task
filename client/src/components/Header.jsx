@@ -1,3 +1,5 @@
+import React from "react";
+import Logout from "./Logout";
 import { AppBar, Toolbar, Typography, Input } from "@mui/material";
 
 function Header({
@@ -6,18 +8,30 @@ function Header({
   editBoardName,
   handleBoardNameChange,
   handleKeyDownBoardName,
+  showLogout,
 }) {
   return (
     <AppBar position="static" style={{ backgroundColor: "#0079bf" }}>
-      <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
+      <Toolbar
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
         <Typography variant="h5">flux.task</Typography>
-        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           {isEditingBoardName ? (
             <Input
               style={{ color: "#fff", fontSize: "20px", fontWeight: "bold" }}
               type="text"
               placeholder="Enter board name"
-              value={boardName}
+              value={boardName || ""}
               onChange={handleBoardNameChange}
               onKeyDown={handleKeyDownBoardName}
               autoFocus
@@ -32,6 +46,7 @@ function Header({
             </Typography>
           )}
         </div>
+        <div style={{ marginLeft: "auto" }}> {showLogout && <Logout />}</div>
       </Toolbar>
     </AppBar>
   );

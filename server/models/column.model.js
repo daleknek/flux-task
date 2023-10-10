@@ -6,11 +6,9 @@ const columnSchema = new Schema(
   {
     name: {
       type: String,
-      required: true,
     },
     wip: {
-      type: Number,
-      default: 0,
+      type: String,
     },
     board: {
       type: Schema.Types.ObjectId,

@@ -13,7 +13,7 @@ export const useColumnsData = () => {
 };
 
 export const LocalContextProvider = (props) => {
-  const [columnsData, setColumnsData] = React.useState({});
+  const [columnsData, setColumnsData] = React.useState([]);
   const value = React.useMemo(
     () => [columnsData, setColumnsData],
     [columnsData]

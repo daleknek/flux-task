@@ -30,7 +30,6 @@ tasksController.getTaskById = async (req, res) => {
 tasksController.createNewTask = async (req, res) => {
   try {
     const task = new Task(req.body);
-    console.log("Created task:", task);
     await task.save();
     res.status(201).json(task);
   } catch (error) {

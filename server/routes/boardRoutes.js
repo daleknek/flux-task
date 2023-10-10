@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const boardsController = require("../controllers/boardsController");
-const authentication = require("../auth");
+const authentication = require("../middleware/authentication");
 
 router
   .route("/")
-  .get(authentication, boardsController.getAllBoards)
+  .get(authentication, boardsController.getUserBoard)
   .post(authentication, boardsController.createNewBoard);
 
 router

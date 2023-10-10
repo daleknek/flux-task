@@ -5,17 +5,28 @@ import Login from "./components/Login";
 import Board from "./components/Board";
 import Column from "./components/Column";
 import TaskModal from "./components/TaskModal";
+import jwtDecode from "jwt-decode";
 
 function App() {
   function RequireAuth({ children, redirectTo }) {
-    const isAuthenticated = localStorage.getItem("userToken") ? true : false;
-    return isAuthenticated ? children : <Navigate to={redirectTo} />;
+    //checks the existence of the userToken in localStorage to determine if the user is authenticated
+    const token = localStorage.getItem("token");
+    const isAuthenticated = token ? true : false;
+    //decodes the token and checks its expiration time (exp) against the current time.
+    const isTokenExpired = token
+      ? jwtDecode(token).exp < Date.now() / 1000
+      : true;
+    //if the token is expired (isTokenExpired is true), the user is redirected to the login page using the Navigate component.
+    return isAuthenticated && !isTokenExpired ? (
+      children
+    ) : (
+      <Navigate to={redirectTo} />
+    );
   }
 
   return (
     <Routes>
-      {/* Redirect to /login when I've solved Login/SignUp logic */}
-      <Route path="/" element={<Board />} />
+      <Route path="/" element={<Login />} />
       <Route
         path="/board"
         element={
@@ -24,7 +35,7 @@ function App() {
           </RequireAuth>
         }
       />
-      <Route
+      {/* <Route
         path="/column/:id"
         element={
           <RequireAuth redirectTo="/login">
@@ -39,7 +50,7 @@ function App() {
             <TaskModal />
           </RequireAuth>
         }
-      />
+      /> */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
     </Routes>

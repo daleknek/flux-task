@@ -24,7 +24,7 @@ function TaskCard({ task, onDelete, onEdit }) {
         >
           <EditIcon fontSize="small" />
         </Button>
-        <Button size="small" onClick={() => onDelete(task.id)}>
+        <Button size="small" onClick={() => onDelete(task._id)}>
           <DeleteIcon fontSize="small" />
         </Button>
       </div>

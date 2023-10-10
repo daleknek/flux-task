@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Container, TextField, Button, Typography, Box } from "@mui/material";
 import Header from "./Header";
 import Footer from "./Footer";
+import { signUp } from "../services/apiService";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +12,8 @@ const SignUp = () => {
     email: "",
     password: "",
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -18,9 +23,15 @@ const SignUp = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("User data submitted:", formData);
+    try {
+      const response = await signUp(formData);
+      console.log("Signup response:", response.data);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during signup:", error);
+    }
   };
 
   return (
@@ -31,7 +42,6 @@ const SignUp = () => {
         flexDirection="column"
         height="70vh"
         justifyContent="center"
-        // alignItems="center"
       >
         <Container component="main" maxWidth="xs">
           <Typography variant="h5" align="center" gutterBottom>
@@ -76,6 +86,19 @@ const SignUp = () => {
               autoComplete="current-password"
               type="password"
             />
+            {/* <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="admin"
+              label="Admin ID"
+              name="admin"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+              type="password"
+            /> */}
             <Box mt={3}>
               <Button
                 type="submit"
@@ -85,6 +108,9 @@ const SignUp = () => {
               >
                 Signup
               </Button>
+              <p>
+                Already have an account? <Link to="/login">Login</Link>
+              </p>
             </Box>
           </form>
         </Container>
