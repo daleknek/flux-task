@@ -15,6 +15,7 @@ function TaskModal({
   setTaskTitle,
   taskDescription,
   setTaskDescription,
+  taskDate,
   createTask,
   updateTask,
   taskId,
@@ -50,15 +51,17 @@ function TaskModal({
             <Button
               variant="contained"
               color="primary"
-              onClick={() => createTask(taskTitle, taskDescription)}
+              onClick={() => createTask()}
             >
               Create Task
             </Button>
           ) : (
             <Button
               variant="contained"
-              color="success"
-              onClick={() => updateTask(taskId, taskTitle, taskDescription)}
+              color="primary"
+              onClick={() =>
+                updateTask(taskId, taskTitle, taskDescription, taskDate)
+              }
             >
               Update Task
             </Button>

@@ -69,7 +69,6 @@ columnsController.updateColumn = async (req, res) => {
     const updatedColumn = await Column.findByIdAndUpdate(
       req.params.columnId,
       req.body,
-      // { $push: { tasks: req.body.taskId } },
       { new: true }
     );
     if (!updatedColumn) {

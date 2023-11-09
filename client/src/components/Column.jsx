@@ -98,9 +98,7 @@ function Column({ column, deleteColumn }) {
         tasks: [...column.tasks, createdTask],
       };
 
-      console.log(column._id);
-      const response2 = await updateColumn(column._id, updatedColumnTaskData);
-      console.log(response2);
+      await updateColumn(column._id, updatedColumnTaskData);
 
       const updatedColumnsData = columnsData.map((col) => {
         if (col._id === column._id) {
@@ -119,35 +117,30 @@ function Column({ column, deleteColumn }) {
     }
   };
 
-  const handleUpdateTask = async (taskId, updatedTitle, updatedDescription) => {
+  const handleUpdateTask = async (
+    taskId,
+    updatedTitle,
+    updatedDescription,
+    updatedDate
+  ) => {
     try {
-      // Fetch the current task data
-      const response = await fetchTasks(taskId);
-      const currentTaskData = response.data;
-
-      // Update the fetched data
-      currentTaskData.title = updatedTitle;
-      currentTaskData.description = updatedDescription;
-
-      // Send the updated data back to the server
+      const currentTaskData = {
+        title: updatedTitle,
+        description: updatedDescription,
+        date: updatedDate,
+      };
       await updateTask(taskId, currentTaskData);
 
-      // Update the local state to reflect the change
       const updatedColumnsData = columnsData.map((col) => {
         if (col._id === column._id) {
-          // If this is the column containing the task to be updated,
-          // map over its tasks to find and update the relevant task
           return {
             ...col,
-            tasks: col.tasks.map(
-              (task) =>
-                task._id === taskId
-                  ? currentTaskData // Update the relevant task
-                  : task // Leave other tasks unchanged
+            tasks: col.tasks.map((task) =>
+              task._id === taskId ? currentTaskData : task
             ),
           };
         }
-        return col; // Leave other columns unchanged
+        return col;
       });
 
       setColumnsData(updatedColumnsData);
@@ -155,7 +148,6 @@ function Column({ column, deleteColumn }) {
       console.error("Error updating task:", error);
     }
 
-    // Reset the editing state
     setEditingTask(false);
     setIsModalOpen(false);
   };
@@ -163,15 +155,13 @@ function Column({ column, deleteColumn }) {
   const handleDeleteTask = async (taskId) => {
     try {
       await deleteTask(taskId);
-
-      const updatedTasks = tasks.filter((task) => task.id !== taskId);
-      const updatedColumnsData = {
-        ...columnsData,
-        [column._id]: {
-          ...columnsData[column._id],
+      const updatedColumnsData = columnsData.map((column) => {
+        const updatedTasks = column.tasks.filter((task) => task._id !== taskId);
+        return {
+          ...column,
           tasks: updatedTasks,
-        },
-      };
+        };
+      });
       setColumnsData(updatedColumnsData);
     } catch (error) {
       console.error("Error deleting task:", error);
@@ -182,7 +172,8 @@ function Column({ column, deleteColumn }) {
     setEditingTask(true);
     setTaskTitle(task.title);
     setTaskDescription(task.description);
-    setEditingTaskId(task.id);
+    setDueDate(task.date);
+    setEditingTaskId(task._id);
     setIsModalOpen(true);
   };
 

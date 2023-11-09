@@ -13,7 +13,7 @@ import {
   updateBoardName,
   createColumn,
   deleteColumn,
-  fetchMultipleUrls,
+  updateColumn,
 } from "../services/apiService";
 
 function Board() {
@@ -127,26 +127,45 @@ function Board() {
     ) {
       return;
     }
+    console.log(source.droppableId);
 
-    const startColumn = columnsData[source.droppableId];
-    const finishColumn = columnsData[destination.droppableId];
+    const startColumnIndex = columnsData.findIndex(
+      (column) => column._id === source.droppableId
+    );
+    const finishColumnIndex = columnsData.findIndex(
+      (column) => column._id === destination.droppableId
+    );
+    //column not found in the array
+    if (startColumnIndex === -1 || finishColumnIndex === -1) {
+      console.error("Column not found");
+      return;
+    }
+
+    const startColumn = columnsData[startColumnIndex];
+    const finishColumn = columnsData[finishColumnIndex];
 
     // If reordering tasks within the same column
-    if (startColumn.columnId === finishColumn.columnId) {
+    if (startColumn._id === finishColumn._id) {
       const reorderedTasks = reorder(
         startColumn.tasks,
         source.index,
         destination.index
       );
 
-      const updatedColumns = {
-        ...columnsData,
-        [startColumn.columnId]: {
-          ...startColumn,
-          tasks: reorderedTasks,
-        },
-      };
+      const updatedColumns = columnsData.map((column) => {
+        if (column._id === startColumn._id) {
+          return {
+            ...column,
+            tasks: reorderedTasks,
+          };
+        }
+        return column;
+      });
       setColumnsData(updatedColumns);
+
+      updateColumn(startColumn._id, {
+        tasks: updatedColumns[startColumnIndex].tasks,
+      });
     } else {
       // If moving tasks between columns
       const moveResult = move(
@@ -156,19 +175,27 @@ function Board() {
         destination
       );
 
-      const updatedColumns = {
-        ...columnsData,
-        [startColumn.columnId]: {
-          ...startColumn,
-          tasks: moveResult.updatedSource,
-        },
-        [finishColumn.columnId]: {
-          ...finishColumn,
-          tasks: moveResult.updatedDest,
-        },
-      };
+      console.log(moveResult);
+
+      const updatedColumns = columnsData.map((column) => {
+        if (column._id === startColumn._id) {
+          return {
+            ...column,
+            tasks: moveResult.updatedSource,
+          };
+        } else if (column._id === finishColumn._id) {
+          return {
+            ...column,
+            tasks: moveResult.updatedDest,
+          };
+        }
+
+        return column;
+      });
 
       setColumnsData(updatedColumns);
+      updateColumn(startColumn._id, { tasks: moveResult.updatedSource });
+      updateColumn(finishColumn._id, { tasks: moveResult.updatedDest });
     }
   };
 

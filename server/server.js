@@ -11,8 +11,8 @@ const corsOptions = {
   origin: "http://localhost:3000",
 };
 app.use(cors(corsOptions));
-app.use(express.json()); // To parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send("Hello from the server!");
