@@ -86,19 +86,6 @@ const SignUp = () => {
               autoComplete="current-password"
               type="password"
             />
-            {/* <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="admin"
-              label="Admin ID"
-              name="admin"
-              value={formData.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              type="password"
-            /> */}
             <Box mt={3}>
               <Button
                 type="submit"

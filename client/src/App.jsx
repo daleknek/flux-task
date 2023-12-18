@@ -3,8 +3,6 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import SignUp from "./components/SignUp";
 import Login from "./components/Login";
 import Board from "./components/Board";
-import Column from "./components/Column";
-import TaskModal from "./components/TaskModal";
 import jwtDecode from "jwt-decode";
 
 function App() {
@@ -35,22 +33,6 @@ function App() {
           </RequireAuth>
         }
       />
-      {/* <Route
-        path="/column/:id"
-        element={
-          <RequireAuth redirectTo="/login">
-            <Column />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/task/:id"
-        element={
-          <RequireAuth redirectTo="/login">
-            <TaskModal />
-          </RequireAuth>
-        }
-      /> */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
     </Routes>

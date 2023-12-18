@@ -6,8 +6,8 @@ const boardsController = {};
 // Get the single board of a user
 boardsController.getUserBoard = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const board = await Board.findOne({ user: userId }).populate({
+    // const userId = req.user.id;
+    const board = await Board.findOne({ name: "New Board" }).populate({
       path: "columns",
       model: "Column",
       populate: {
@@ -15,14 +15,14 @@ boardsController.getUserBoard = async (req, res) => {
         model: "Task",
       },
     });
+
     if (!board) {
       return res.status(404).json({ board: {} });
     }
-
     res.status(200).json({
       _id: board._id,
       name: board.name,
-      user: board.user,
+      // user: board.user,
       columns: board.columns,
     });
   } catch (error) {
@@ -48,7 +48,7 @@ boardsController.createNewBoard = async (req, res) => {
   try {
     const boardData = {
       name: req.body.name,
-      user: req.user.id,
+      // user: req.user.id,
       columns: req.body.columns || [],
     };
     const board = new Board(boardData);
@@ -62,7 +62,7 @@ boardsController.createNewBoard = async (req, res) => {
       .json({ error: "Failed to create board", details: error.message });
   }
   console.log("Request to create new board:", req.body);
-  console.log("User ID:", req.user._id);
+  // console.log("User ID:", req.user._id);
 };
 
 // Update a board by ID
@@ -89,17 +89,17 @@ boardsController.updateBoard = async (req, res) => {
   }
 };
 
-// Delete a board by ID
-boardsController.deleteBoard = async (req, res) => {
-  try {
-    const deletedBoard = await Board.findByIdAndDelete(req.params.boardId);
-    if (!deletedBoard) {
-      return res.status(404).json({ error: "Board not found" });
-    }
-    res.status(200).json({ message: "Board deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: "Failed to delete board" });
-  }
-};
+// // Delete a board by ID
+// boardsController.deleteBoard = async (req, res) => {
+//   try {
+//     const deletedBoard = await Board.findByIdAndDelete(req.params.boardId);
+//     if (!deletedBoard) {
+//       return res.status(404).json({ error: "Board not found" });
+//     }
+//     res.status(200).json({ message: "Board deleted successfully" });
+//   } catch (error) {
+//     res.status(400).json({ error: "Failed to delete board" });
+//   }
+// };
 
 module.exports = boardsController;

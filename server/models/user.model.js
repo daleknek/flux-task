@@ -31,8 +31,6 @@ const userSchema = new Schema(
       enum: ["admin", "user"],
       default: "user",
     },
-
-    board: { type: Schema.Types.ObjectId, ref: "Board" },
   },
   { timestamps: true }
 );

@@ -11,7 +11,7 @@ router
 router
   .route("/:boardId")
   .get(authentication, boardsController.getBoardById)
-  .patch(authentication, boardsController.updateBoard)
-  .delete(authentication, boardsController.deleteBoard);
+  .patch(authentication, boardsController.updateBoard);
+// .delete(authentication, boardsController.deleteBoard);
 
 module.exports = router;

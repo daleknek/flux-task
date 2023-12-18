@@ -8,10 +8,6 @@ const boardSchema = new Schema(
       type: String,
       required: true,
     },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
     columns: [
       {
         type: Schema.Types.ObjectId,

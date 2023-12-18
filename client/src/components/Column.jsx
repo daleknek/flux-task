@@ -88,6 +88,7 @@ function Column({ column, deleteColumn }) {
       description: taskDescription,
       date: dayjs().format("MM/DD/YYYY"),
       column: column._id,
+      // user: user._id,
     };
 
     try {

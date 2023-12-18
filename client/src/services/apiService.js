@@ -75,16 +75,16 @@ export const fetchColumns = async () => {
   }
 };
 
-export const fetchMultipleUrls = async () => {
-  try {
-    const urls = ["/boards", "/columns"];
-    const promises = urls.map((url) => api.get(url));
-    const results = await Promise.all(promises);
-    results.forEach((result) => console.log("Results:", result.data));
-  } catch (error) {
-    console.error(error);
-  }
-};
+// export const fetchMultipleUrls = async () => {
+//   try {
+//     const urls = ["/boards", "/columns"];
+//     const promises = urls.map((url) => api.get(url));
+//     const results = await Promise.all(promises);
+//     results.forEach((result) => console.log("Results:", result.data));
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
 
 export const createBoard = async (boardName) => {
   try {
@@ -137,6 +137,9 @@ export const updateTask = async (taskId, taskData) => {
 export const deleteTask = async (taskId) => {
   return api.delete(`/tasks/${taskId}`);
 };
+
+// User API calls
+// fetch users
 
 // Interceptor for handling errors
 api.interceptors.response.use(

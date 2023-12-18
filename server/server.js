@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const logRequests = require("./middleware/logRequests");
+const errorHandler = require("./middleware/errorHandler");
 
 require("dotenv").config();
 
@@ -13,6 +15,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(logRequests);
 
 app.get("/", (req, res) => {
   res.send("Hello from the server!");
@@ -41,6 +44,8 @@ app.use("/users", userRoutes);
 app.use("/boards", boardRoutes);
 app.use("/columns", columnRoutes);
 app.use("/tasks", taskRoutes);
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
