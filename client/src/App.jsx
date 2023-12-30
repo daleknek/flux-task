@@ -1,14 +1,14 @@
-import React from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
-import SignUp from "./components/SignUp";
-import Login from "./components/Login";
-import Board from "./components/Board";
-import jwtDecode from "jwt-decode";
+import React from 'react';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import SignUp from './components/SignUp.jsx';
+import Login from './components/Login.jsx';
+import Board from './components/Board.jsx';
+import jwtDecode from 'jwt-decode';
 
 function App() {
   function RequireAuth({ children, redirectTo }) {
     //checks the existence of the userToken in localStorage to determine if the user is authenticated
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const isAuthenticated = token ? true : false;
     //decodes the token and checks its expiration time (exp) against the current time.
     const isTokenExpired = token
@@ -24,17 +24,17 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path='/' element={<Login />} />
       <Route
-        path="/board"
+        path='/board'
         element={
-          <RequireAuth redirectTo="/login">
+          <RequireAuth redirectTo='/login'>
             <Board />
           </RequireAuth>
         }
       />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
+      <Route path='/login' element={<Login />} />
+      <Route path='/signup' element={<SignUp />} />
     </Routes>
   );
 }
