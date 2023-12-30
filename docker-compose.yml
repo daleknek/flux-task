@@ -10,7 +10,6 @@ services:
       ATLAS_URI: 'mongodb+srv://arro:TbIRWFR5SEKNmsUc@cluster0.j17r0zu.mongodb.net'
     dns:
       - 8.8.8.8
-
   client:
     build:
       context: ./client
