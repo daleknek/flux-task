@@ -75,14 +75,9 @@ usersController.deleteUser = async (req, res) => {
 // Sign up user
 usersController.signUp = async (req, res) => {
   try {
-    const { email, username, password, adminSecret } = req.body;
+    const { email, username, password } = req.body;
 
-    // If the adminSecret matches, assign admin role
-    if (adminSecret === process.env.ADM_PASS) {
-      req.body.role = "admin";
-    }
-
-    const user = new User({ email, username, password, role: req.body.role });
+    const user = new User({ email, username, password });
     await user.save();
 
     res.status(201).send({ message: "User registered successfully!" });

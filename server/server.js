@@ -7,14 +7,14 @@ const errorHandler = require("./middleware/errorHandler");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = 4000;
 
 const corsOptions = {
   origin: "http://localhost:3000",
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 app.use(logRequests);
 
 app.get("/", (req, res) => {

@@ -65,27 +65,6 @@ export const initializeBoard = async () => {
   }
 };
 
-export const fetchColumns = async () => {
-  try {
-    const response = await api.get("/columns");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching columns:", error);
-    throw error;
-  }
-};
-
-// export const fetchMultipleUrls = async () => {
-//   try {
-//     const urls = ["/boards", "/columns"];
-//     const promises = urls.map((url) => api.get(url));
-//     const results = await Promise.all(promises);
-//     results.forEach((result) => console.log("Results:", result.data));
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
-
 export const createBoard = async (boardName) => {
   try {
     const response = api.post("/boards", { name: boardName });
@@ -101,6 +80,16 @@ export const updateBoardName = async (boardId, boardName) => {
 };
 
 //Column API calls
+export const fetchColumns = async () => {
+  try {
+    const response = await api.get("/columns");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching columns:", error);
+    throw error;
+  }
+};
+
 export const createColumn = async (newColumn) => {
   return api.post("/columns", newColumn);
 };
