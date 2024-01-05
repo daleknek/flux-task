@@ -60,17 +60,17 @@ usersController.updateUser = async (req, res) => {
 };
 
 //Delete a user by ID
-usersController.deleteUser = async (req, res) => {
-  try {
-    const deletedUser = await User.findByIdAndDelete(req.params.userId);
-    if (!deletedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(400).json({ error: "Failed to delete user" });
-  }
-};
+// usersController.deleteUser = async (req, res) => {
+//   try {
+//     const deletedUser = await User.findByIdAndDelete(req.params.userId);
+//     if (!deletedUser) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+//     res.status(200).json({ message: "User deleted successfully" });
+//   } catch (error) {
+//     res.status(400).json({ error: "Failed to delete user" });
+//   }
+// };
 
 // Sign up user
 usersController.signUp = async (req, res) => {
